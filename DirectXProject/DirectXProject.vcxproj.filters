@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="application">
+      <UniqueIdentifier>{3e432996-54df-45e1-8017-ed972daa4884}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="utility">
+      <UniqueIdentifier>{fa152bb1-5f8c-47b3-8b38-0841b722fd3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mesh">
+      <UniqueIdentifier>{47411cf5-64e2-4434-8867-dc4a8135ae82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platformString">
+      <UniqueIdentifier>{232701ee-2dc7-4fcf-a3d1-fcf2ded72470}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="application.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
+    <ClCompile Include="utility.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh.cpp">
+      <Filter>mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="platformString.cpp">
+      <Filter>platformString</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="application.h">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="utility.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="utilityMacroDefine.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="platformString.h">
+      <Filter>platformString</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
