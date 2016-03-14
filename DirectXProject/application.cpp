@@ -381,14 +381,11 @@ void Application::Render()
 			g_pEffect->EndPass();
 			g_pEffect->End();
 		}
+
+		// End the scene.
+		g_pDevice->EndScene();
+		g_pDevice->Present(0, 0, 0, 0);
 	}
-	
-	// End the scene.
-	g_pDevice->EndScene();
-	g_pDevice->Present(0, 0, 0, 0);
-
-
-
 }
 
 
