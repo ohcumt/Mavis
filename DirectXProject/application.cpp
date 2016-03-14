@@ -46,7 +46,7 @@ HRESULT Application::InitWindows(HINSTANCE hInstance, WNDPROC wndProc)
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.hInstance = hInstance;
 	wc.lpfnWndProc = wndProc;
-	wc.lpszClassName = L"D3DWND";
+	wc.lpszClassName = "D3DWND";
 
 	RECT rc = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
 
@@ -55,8 +55,8 @@ HRESULT Application::InitWindows(HINSTANCE hInstance, WNDPROC wndProc)
 	RegisterClass(&wc);
 
 	m_hMainHandle = CreateWindow(
-		L"D3DWND",
-		L"Character Animation with Direct3D: Example 2.1", //Title
+		"D3DWND",
+		"Character Animation with Direct3D: Example 2.1", //Title
 		WS_OVERLAPPEDWINDOW,	//Style
 		0, // X
 		0, // Y
@@ -181,7 +181,7 @@ HRESULT Application::InitD3D(bool windowed)
 	D3DXCreateFont(
 		g_pDevice, 20, 0, FW_BOLD, 1, false,
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
-		DEFAULT_PITCH | FF_DONTCARE, L"Arial", &g_pFont
+		DEFAULT_PITCH | FF_DONTCARE, "Arial", &g_pFont
 		);
 
 	//Create Sprite
@@ -191,13 +191,13 @@ HRESULT Application::InitD3D(bool windowed)
 	ID3DXBuffer *pErrorMsgs = NULL;
 
 	HRESULT hRes = D3DXCreateEffectFromFile(
-		g_pDevice, L"resources/fx/lighting.fx", 
+		g_pDevice, "resources/fx/lighting.fx", 
 		NULL, NULL, D3DXSHADER_DEBUG, NULL, 
 		&g_pEffect, &pErrorMsgs );
 
 	if(FAILED(hRes) && (pErrorMsgs != NULL))		//Failed to create Effect
 	{
-		MessageBox(NULL, (LPCTSTR )pErrorMsgs->GetBufferPointer(), L"Effect Error", MB_OK);
+		MessageBox(NULL, (LPCTSTR )pErrorMsgs->GetBufferPointer(), "Effect Error", MB_OK);
 		return E_FAIL;
 	}
 

@@ -31,7 +31,7 @@ HRESULT Mesh::Load(char* fName)
 
 	DWORD materialNum = NULL;
 	//HRESULT result = D3DXLoadMeshFromX((LPCWSTR)fName, D3DXMESH_MANAGED, g_pDevice, &adjacencyBuffer, &materialBuffer, NULL, &materialNum, &m_pMesh);
-	HRESULT result = D3DXLoadMeshFromX(L"resources/meshes/soldier.x", D3DXMESH_MANAGED, g_pDevice, &adjacencyBuffer, &materialBuffer, NULL, &materialNum, &m_pMesh);
+	HRESULT result = D3DXLoadMeshFromX(fName, D3DXMESH_MANAGED, g_pDevice, &adjacencyBuffer, &materialBuffer, NULL, &materialNum, &m_pMesh);
 
 	if(FAILED(result))
 	{
@@ -53,7 +53,7 @@ HRESULT Mesh::Load(char* fName)
 			strcpy_s(textureFileName, PATH_TO_TEXTURES);
 			strcat_s(textureFileName, materials[i].pTextureFilename);
 			IDirect3DTexture9* newTexture = NULL;
-			D3DXCreateTextureFromFile(g_pDevice, (LPCWSTR)textureFileName, &newTexture);
+			D3DXCreateTextureFromFile(g_pDevice, textureFileName, &newTexture);
 			m_pTextures.push_back(newTexture);
 #undef PATH_TO_TEXTURES
 		}
