@@ -309,47 +309,19 @@ void Application::Render()
 		return ;
 	}
 
-	D3DXMATRIX identify, shadow;
-	D3DXMatrixIdentity(&identify);
+	//Create Matrices
+	D3DXMATRIX identity, world, view, proj;
+	D3DXMatrixIdentity(&identity);
+	D3DXMatrixRotationY(&world, m_angle);
+	D3DXMatrixLookAtLH(&view, &D3DXVECTOR3(0.0f, 1.5f, -3.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f));
+	D3DXMatrixPerspectiveFovLH(&proj, D3DX_PI / 4.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 1000.0f);
 
-	D3DXPLANE ground(0.0f, 1.0f, 0.0f, 0.0f);
-	D3DXVECTOR4 lightPos(-20.0f, 75.0f, -120.0f, 0.0f);
-
-	// 计算平面阴影变换矩阵
-	D3DXMatrixShadow(&shadow, &lightPos, &ground);
-
-
-
-	D3DXMATRIX view, proj, world;
-	D3DXMatrixIdentity(&world);
-
-
-	D3DXVECTOR3 position(cos(m_angle) * 2.0f, 2.0f, sin(m_angle) * 2.0f); //camera在世界坐标系中的位置向量
-	D3DXVECTOR3 target(0.0f, 1.0f, 0.0f);//target是camera的朝向向量，可以是原点，也可以是其它观察点
-	D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);//定义向上的方向，一般是[0,1,0]
-	// 返回 世界->视图 坐标系的变换矩阵
-	D3DXMatrixLookAtLH(&view, &position, &target, &up);
-
-
-
-	float fovy    = D3DX_PI / 4.0f; // 视角
-	float aspect  = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT; // 宽高比
-	float zn      = 0.1f;    // 近裁截面
-	float zf      = 100.0f;  // 远裁截面
-	// 计算变换矩阵  --> 把3D世界的物体变换到
-	// (1,1,0) (-1,1,0) (-1,-1,0) (1,-1,0) (1,1,1) (-1,1,1) (-1,-1,1) (1,-1,1)这个小盒子中
-	D3DXMatrixPerspectiveFovLH(&proj, fovy, aspect, zn, zf);
-
-	//  设置变换矩阵, 实际变换的时候,先得到变换矩阵,再把相机中的物体乘以变换矩阵
-	//Set transformation matrices
-	g_pDevice->SetTransform(D3DTS_WORLD, &world);
+	g_pDevice->SetTransform(D3DTS_WORLD, &identity);
 	g_pDevice->SetTransform(D3DTS_VIEW, &view);
 	g_pDevice->SetTransform(D3DTS_PROJECTION, &proj);
 
-	g_pEffect->SetMatrix("matVP", &(view * proj));
-
 	// 清空目标缓存和深度缓存（用0xffffffff, 1.0f）
-	g_pDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0);
+	g_pDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0L);
 
 	if (SUCCEEDED(g_pDevice->BeginScene())) 
 	{

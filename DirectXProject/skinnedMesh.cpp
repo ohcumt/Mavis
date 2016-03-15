@@ -36,6 +36,7 @@ HRESULT BoneHierarchyLoader::CreateFrame(THIS_ LPCSTR Name, LPD3DXFRAME *ppNewFr
 		{
 			newBone->Name[i] = Name[i];
 		}
+		newBone->Name[strlen(Name)] = '\0';
 	}
 	 
 	D3DXMatrixIdentity(&newBone->TransformationMatrix);
@@ -102,7 +103,7 @@ void SkinnedMesh::UpdateMatrices(Bone* bone, D3DXMATRIX *parentMatrix)
 		parentMatrix);
 
 	if(bone->pFrameSibling)  UpdateMatrices((Bone*)bone->pFrameSibling, parentMatrix);
-	if(bone->pFrameFirstChild)  UpdateMatrices((Bone*)bone->pFrameFirstChild, parentMatrix);
+	if(bone->pFrameFirstChild)  UpdateMatrices((Bone*)bone->pFrameFirstChild, &bone->CombinedTransformationMatrix);
 }
 
 void SkinnedMesh::RenderSkeleton(Bone* bone, Bone *parent, D3DXMATRIX world)
@@ -111,14 +112,14 @@ void SkinnedMesh::RenderSkeleton(Bone* bone, Bone *parent, D3DXMATRIX world)
 	//Temporary function to render the bony hierarchy
 	if(bone == NULL)bone = (Bone*)m_pRootBone;
 
+
+	D3DXMATRIX r, s;
+
+	// 计算绕y轴旋转角度
+	D3DXMatrixRotationYawPitchRoll(&r, -D3DX_PI*0.5f, 0.0f, 0.0f);
+
 	if (parent && parent->Name && bone->Name) 
 	{
-
-		D3DXMATRIX r, s;
-
-		// 计算绕y轴旋转角度
-		D3DXMatrixRotationYawPitchRoll(&r, -D3DX_PI*0.5f, 0.0f, 0.0f);
-
 		g_pDevice->SetRenderState(D3DRS_LIGHTING, true); // 打开光照
 		g_pDevice->SetTransform(D3DTS_WORLD, &(r*bone->CombinedTransformationMatrix*world));
 		m_pSphereMesh->DrawSubset(0);
