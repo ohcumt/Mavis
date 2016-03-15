@@ -85,12 +85,14 @@
     <ClCompile Include="platformString.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mesh.cpp" />
+    <ClCompile Include="skinnedMesh.cpp" />
     <ClCompile Include="utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.h" />
     <ClInclude Include="platformString.h" />
     <ClInclude Include="mesh.h" />
+    <ClInclude Include="skinnedMesh.h" />
     <ClInclude Include="utility.h" />
     <ClInclude Include="utilityMacroDefine.h" />
   </ItemGroup>

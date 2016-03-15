@@ -3,7 +3,8 @@
 #pragma once 
 #include <windows.h>
 #include "utility.h"
-#include "mesh.h"
+//#include "mesh.h"
+#include "skinnedMesh.h"
 
 
 
@@ -24,7 +25,10 @@ public:
 private:
 	HWND m_hMainHandle;
 	D3DPRESENT_PARAMETERS m_d3dParam;
-	Mesh m_soldier;
+	//Mesh m_soldier;
+
+	SkinnedMesh m_drone;
+
 	bool m_bDeviceLost;
 	float m_angle;
 

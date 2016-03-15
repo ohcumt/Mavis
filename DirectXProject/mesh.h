@@ -11,11 +11,11 @@ public:
 	Mesh(char* fName);
 	~Mesh();
 
-	HRESULT Load(char* fName);
-	void Render();
-	void Release();
+	virtual HRESULT Load(char* fName);
+	virtual void Render();
+	virtual void Release();
 
-private:
+protected:
 	ID3DXMesh *m_pMesh;
 	std::vector<IDirect3DTexture9*> m_pTextures;
 	std::vector<D3DMATERIAL9> m_Materials;

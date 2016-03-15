@@ -201,7 +201,8 @@ HRESULT Application::InitD3D(bool windowed)
 		return E_FAIL;
 	}
 
-	m_soldier.Load("resources/meshes/soldier.x");
+	//m_soldier.Load("resources/meshes/soldier.x");
+	m_drone.Load("resources/meshes/soldier.x");
 
 	m_bDeviceLost = false;
 
@@ -352,6 +353,7 @@ void Application::Render()
 
 	if (SUCCEEDED(g_pDevice->BeginScene())) 
 	{
+	/*
 		// render soldier
 		{
 			g_pEffect->SetMatrix("matW", &identify);
@@ -362,7 +364,8 @@ void Application::Render()
 			g_pEffect->Begin(NULL, NULL);
 			g_pEffect->BeginPass(0);
 
-			m_soldier.Render();
+			//m_soldier.Render();
+			
 
 			g_pEffect->EndPass();
 			g_pEffect->End();
@@ -381,7 +384,9 @@ void Application::Render()
 			g_pEffect->EndPass();
 			g_pEffect->End();
 		}
+		*/
 
+		m_drone.RenderSkeleton(NULL, NULL, world);
 		// End the scene.
 		g_pDevice->EndScene();
 		g_pDevice->Present(0, 0, 0, 0);

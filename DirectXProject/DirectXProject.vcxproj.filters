@@ -21,6 +21,9 @@
     <Filter Include="platformString">
       <UniqueIdentifier>{232701ee-2dc7-4fcf-a3d1-fcf2ded72470}</UniqueIdentifier>
     </Filter>
+    <Filter Include="skinnedMesh">
+      <UniqueIdentifier>{3e2fe90c-9317-4c80-a90b-8cdf2dce125b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -38,6 +41,9 @@
     <ClCompile Include="platformString.cpp">
       <Filter>platformString</Filter>
     </ClCompile>
+    <ClCompile Include="skinnedMesh.cpp">
+      <Filter>skinnedMesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.h">
@@ -54,6 +60,9 @@
     </ClInclude>
     <ClInclude Include="platformString.h">
       <Filter>platformString</Filter>
+    </ClInclude>
+    <ClInclude Include="skinnedMesh.h">
+      <Filter>skinnedMesh</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
