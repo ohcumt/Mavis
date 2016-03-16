@@ -50,8 +50,71 @@ HRESULT BoneHierarchyLoader::CreateFrame(THIS_ LPCSTR Name, LPD3DXFRAME *ppNewFr
 HRESULT BoneHierarchyLoader::CreateMeshContainer(THIS_ LPCTSTR Name, CONST D3DXMESHDATA * pMeshData, CONST D3DXMATERIAL * pMaterials, CONST D3DXEFFECTINSTANCE * pEffectInstances, DWORD NumMaterials, CONST DWORD * pAdjacency, LPD3DXSKININFO pSkinInfo, LPD3DXMESHCONTAINER * ppNewMeshContainer)
 {
 	//Just return a temporary mesh for now...
-	*ppNewMeshContainer = new BoneMesh;
-	memset(*ppNewMeshContainer, 0, sizeof(BoneMesh));
+
+
+	BoneMesh* boneMesh = new BoneMesh;
+	memset(boneMesh, 0, sizeof(BoneMesh));
+
+
+	// get mesh data
+	boneMesh->originalMesh = pMeshData->pMesh;
+	boneMesh->MeshData.pMesh = pMeshData->pMesh;
+	boneMesh->MeshData.Type = pMeshData->Type;
+
+	pMeshData->pMesh->AddRef(); 
+
+	IDirect3DDevice9 *device = NULL;	
+	pMeshData->pMesh->GetDevice(&device);
+
+	for (int i=0; i<(int)NumMaterials; ++i) 
+	{
+		D3DXMATERIAL mtrl;
+		memcpy(&mtrl, &pMaterials[i], sizeof(D3DXMATERIAL));
+		boneMesh->materials.push_back(mtrl.MatD3D);
+
+		IDirect3DTexture9* newTexture = NULL;
+
+		if (mtrl.pTextureFilename!=NULL)
+		{
+			char textureName[200];
+			strcpy_s(textureName, "resources/meshes/");
+			strcat_s(textureName, mtrl.pTextureFilename);
+
+			D3DXCreateTextureFromFile(device, textureName, &newTexture);
+		}
+
+		boneMesh->pTextures.push_back(newTexture);
+	}
+
+	if (pSkinInfo != NULL) 
+	{
+		boneMesh->pSkinInfo = pSkinInfo;
+		pSkinInfo->AddRef();
+
+		pMeshData->pMesh->CloneMeshFVF(
+			D3DXMESH_MANAGED, pMeshData->pMesh->GetFVF(),
+			device, &boneMesh->MeshData.pMesh );
+
+		boneMesh->MeshData.pMesh->GetAttributeTable(NULL, &boneMesh->numAttributeGroups);
+		boneMesh->attributeTable = new D3DXATTRIBUTERANGE[boneMesh->numAttributeGroups];
+
+		boneMesh->MeshData.pMesh->GetAttributeTable(boneMesh->attributeTable, NULL);
+
+
+		int numBones = pSkinInfo->GetNumBones();
+
+		boneMesh->boneOffsetMatrices  = new D3DXMATRIX[numBones];
+		boneMesh->currentBoneMatrices = new D3DXMATRIX[numBones];
+
+		for (int i=0; i<numBones; ++i) 
+		{
+			boneMesh->boneOffsetMatrices[i] = *(boneMesh->pSkinInfo->GetBoneOffsetMatrix(i));
+		}
+	}
+
+	//Set ppNewMeshContainer to the newly created boneMesh container
+	*ppNewMeshContainer = boneMesh;
+
 	return S_OK;
 }
 
@@ -73,9 +136,23 @@ STDMETHODIMP BoneHierarchyLoader::DestroyFrame(THIS_ LPD3DXFRAME pFrameToFree)
 
 STDMETHODIMP BoneHierarchyLoader::DestroyMeshContainer(THIS_ LPD3DXMESHCONTAINER pMeshContainerBase)
 {
-	if (pMeshContainerBase) 
+
+	BoneMesh *boneMesh = (BoneMesh*)pMeshContainerBase;
+	if (boneMesh) 
 	{
-		delete pMeshContainerBase;
+		int numTexture = (int)boneMesh->pTextures.size();
+		for (int i=0; i<numTexture; ++i) 
+		{
+			if (boneMesh->pTextures[i]) 
+			{
+				boneMesh->pTextures[i]->Release();
+			}
+		}
+
+		if(boneMesh->MeshData.pMesh)   boneMesh->MeshData.pMesh->Release();
+		if(boneMesh->pSkinInfo)        boneMesh->pSkinInfo->Release();
+		if(boneMesh->originalMesh)     boneMesh->originalMesh->Release();
+		delete boneMesh;
 	}
 	return S_OK;
 }
@@ -83,7 +160,12 @@ STDMETHODIMP BoneHierarchyLoader::DestroyMeshContainer(THIS_ LPD3DXMESHCONTAINER
 void SkinnedMesh::Load(char* fName)
 {
 	BoneHierarchyLoader boneHierarchy;
-	D3DXLoadMeshHierarchyFromX(fName, D3DXMESH_MANAGED, g_pDevice, &boneHierarchy,NULL, &m_pRootBone, NULL);
+	D3DXLoadMeshHierarchyFromX(
+		fName, D3DXMESH_MANAGED, 
+		g_pDevice, &boneHierarchy,
+		NULL, &m_pRootBone, NULL);
+
+	SetupBoneMatrixPointers((Bone*)m_pRootBone);
 
 	D3DXMATRIX i;
 	D3DXMatrixIdentity(&i);
@@ -98,7 +180,8 @@ void SkinnedMesh::UpdateMatrices(Bone* bone, D3DXMATRIX *parentMatrix)
 	if(bone == NULL)return;
 
 	//Calculate the combined transformation matrix
-	D3DXMatrixMultiply(&bone->CombinedTransformationMatrix,
+	D3DXMatrixMultiply(
+		&bone->CombinedTransformationMatrix,
 		&bone->TransformationMatrix,
 		parentMatrix);
 
@@ -157,5 +240,84 @@ SkinnedMesh::~SkinnedMesh()
 {
 	BoneHierarchyLoader boneHierarchy;
 	boneHierarchy.DestroyFrame(m_pRootBone);
+}
+
+void SkinnedMesh::Render(Bone *bone)
+{
+	if (bone==NULL) 
+	{
+		bone = (Bone*)m_pRootBone;
+	}
+
+	if ( bone->pMeshContainer) 
+	{
+		BoneMesh *boneMesh = (BoneMesh*) bone->pMeshContainer;
+
+		if (boneMesh->pSkinInfo!=NULL) 
+		{
+			// set up bone transform
+			int numBones = boneMesh->pSkinInfo->GetNumBones();
+			for (int i=0; i<numBones; ++i) 
+			{
+				D3DXMatrixMultiply(&boneMesh->currentBoneMatrices[i],
+					&boneMesh->boneOffsetMatrices[i],
+					boneMesh->boneMatrixPtrs[i]);
+			}
+
+			// update the skinned mesh 
+			BYTE *src = NULL, *dest = NULL;
+			boneMesh->originalMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&src);
+			boneMesh->MeshData.pMesh->LockVertexBuffer(0, (void**)&dest);
+
+			boneMesh->pSkinInfo->UpdateSkinnedMesh(boneMesh->currentBoneMatrices, NULL, src, dest);
+
+			boneMesh->MeshData.pMesh->UnlockVertexBuffer();
+			boneMesh->originalMesh->UnlockVertexBuffer();
+
+
+			// render the mesh 
+			for (int i=0; i<(int)boneMesh->numAttributeGroups; ++i) 
+			{
+				int mtrlIndex = boneMesh->attributeTable[i].AttribId;
+				g_pDevice->SetMaterial(&(boneMesh->materials[mtrlIndex]));
+				g_pDevice->SetTexture(0, boneMesh->pTextures[mtrlIndex]);
+				boneMesh->MeshData.pMesh->DrawSubset(mtrlIndex);
+			}
+		}
+	}
+
+	if(bone->pFrameSibling) Render((Bone*)bone->pFrameSibling);
+	if(bone->pFrameFirstChild) Render((Bone*)bone->pFrameFirstChild);
+}
+
+void SkinnedMesh::SetupBoneMatrixPointers(Bone *bone)
+{
+	if (bone->pMeshContainer)
+	{
+		BoneMesh *boneMesh = (BoneMesh*) bone->pMeshContainer;
+
+		if (boneMesh->pSkinInfo) 
+		{
+			int numBones = boneMesh->pSkinInfo->GetNumBones();
+			boneMesh->boneMatrixPtrs = new D3DXMATRIX *[numBones];
+
+			for (int i=0; i<numBones; ++i) 
+			{
+				Bone*b = (Bone*)D3DXFrameFind(m_pRootBone, boneMesh->pSkinInfo->GetBoneName(i));
+				if (b) 
+				{
+					boneMesh->boneMatrixPtrs[i] = &b->CombinedTransformationMatrix;
+				}
+				else 
+				{
+					boneMesh->boneMatrixPtrs[i] = NULL;
+				}  
+			}
+		}
+	}
+
+	if(bone->pFrameSibling)  SetupBoneMatrixPointers((Bone*)bone->pFrameSibling);
+	if(bone->pFrameFirstChild)  SetupBoneMatrixPointers((Bone*)bone->pFrameFirstChild);
+
 }
 

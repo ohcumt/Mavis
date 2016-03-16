@@ -310,11 +310,17 @@ void Application::Render()
 	}
 
 	//Create Matrices
-	D3DXMATRIX identity, world, view, proj;
+	D3DXMATRIX identity, world, view, proj, shadow;
 	D3DXMatrixIdentity(&identity);
 	D3DXMatrixRotationY(&world, m_angle);
-	D3DXMatrixLookAtLH(&view, &D3DXVECTOR3(0.0f, 1.5f, -3.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f));
+	//D3DXMatrixLookAtLH(&view, &D3DXVECTOR3(0.0f, 1.5f, -3.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f));
+	//D3DXMatrixPerspectiveFovLH(&proj, D3DX_PI / 4.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 1000.0f);
+	D3DXMatrixLookAtLH(&view, &D3DXVECTOR3(cos(m_angle) * 3.0f, 1.5f, sin(m_angle) * 3.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f), &D3DXVECTOR3(0.0f, 1.0f, 0.0f));
 	D3DXMatrixPerspectiveFovLH(&proj, D3DX_PI / 4.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 1000.0f);
+	D3DXPLANE ground(0.0f, 1.0f, 0.0f, 0.0f);
+	D3DXVECTOR4 lightPos(-20.0f, 75.0f, -120.0f, 0.0f);
+	D3DXMatrixShadow(&shadow, &lightPos, &ground);
+
 
 	g_pDevice->SetTransform(D3DTS_WORLD, &identity);
 	g_pDevice->SetTransform(D3DTS_VIEW, &view);
@@ -325,10 +331,11 @@ void Application::Render()
 
 	if (SUCCEEDED(g_pDevice->BeginScene())) 
 	{
-	/*
+	
 		// render soldier
 		{
-			g_pEffect->SetMatrix("matW", &identify);
+			g_pEffect->SetMatrix("matW", &identity);
+			g_pEffect->SetMatrix("matVP", &(view * proj));
 			g_pEffect->SetVector("lightPos", &lightPos);
 
 			D3DXHANDLE hTech = g_pEffect->GetTechniqueByName("Lighting");
@@ -336,29 +343,39 @@ void Application::Render()
 			g_pEffect->Begin(NULL, NULL);
 			g_pEffect->BeginPass(0);
 
-			//m_soldier.Render();
+			m_drone.Render(NULL);
 			
 
 			g_pEffect->EndPass();
 			g_pEffect->End();
-		}
-
+		} 
+		/*
 		// render shadow
 		{
-			g_pEffect->SetMatrix("matW", &shadow);
+			g_pEffect->SetMatrix("matW", &identity);
 			D3DXHANDLE hTech = g_pEffect->GetTechniqueByName("Shadow");
 			g_pEffect->SetTechnique(hTech);
 			g_pEffect->Begin(NULL, NULL);
 			g_pEffect->BeginPass(0);
 
-			m_soldier.Render();
+			m_drone.Render(NULL);
 
 			g_pEffect->EndPass();
 			g_pEffect->End();
 		}
 		*/
+		
+		if(KeyDown(VK_SPACE))
+		{
+			g_pDevice->Clear(0L, NULL, D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0L);
+			m_drone.RenderSkeleton(NULL, NULL, identity);
+		}
 
-		m_drone.RenderSkeleton(NULL, NULL, world);
+		RECT rc = { 10, 10, 0, 0 };
+		g_pFont->DrawText(NULL, "Press Space to Toggle Skeleton", -1, &rc, DT_LEFT | DT_TOP | DT_NOCLIP, 0x66000000);
+
+
+		//m_drone.RenderSkeleton(NULL, NULL, world);
 		// End the scene.
 		g_pDevice->EndScene();
 		g_pDevice->Present(0, 0, 0, 0);

@@ -89,7 +89,7 @@ technique Shadow
 	pass P0
 	{        
 		Lighting = false;
-
+		
 		VertexShader = compile vs_2_0 vs_lighting();
 		PixelShader  = compile ps_2_0 ps_shadow();
 	}
