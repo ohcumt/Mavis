@@ -91,18 +91,31 @@ HRESULT BoneHierarchyLoader::CreateMeshContainer(THIS_ LPCTSTR Name, CONST D3DXM
 		boneMesh->pSkinInfo = pSkinInfo;
 		pSkinInfo->AddRef();
 
-		pMeshData->pMesh->CloneMeshFVF(
-			D3DXMESH_MANAGED, pMeshData->pMesh->GetFVF(),
-			device, &boneMesh->MeshData.pMesh );
 
-		boneMesh->MeshData.pMesh->GetAttributeTable(NULL, &boneMesh->numAttributeGroups);
-		boneMesh->attributeTable = new D3DXATTRIBUTERANGE[boneMesh->numAttributeGroups];
+		DWORD maxVertInfluences = 0;
+		DWORD numBoneComboEntries = 0;
+		ID3DXBuffer *boneComboTable = NULL;
 
-		boneMesh->MeshData.pMesh->GetAttributeTable(boneMesh->attributeTable, NULL);
+		pSkinInfo->ConvertToIndexedBlendedMesh(
+			pMeshData->pMesh, D3DXMESH_MANAGED|D3DXMESH_WRITEONLY,
+			30, NULL, NULL, NULL, NULL, 
+			&maxVertInfluences, &numBoneComboEntries, 
+			&boneComboTable, &boneMesh->MeshData.pMesh);
+
+
+		// bone combination table not used 
+		if (boneComboTable) 
+		{
+			boneComboTable->Release();
+		}
+
+		// get attribute table 
+		boneMesh->MeshData.pMesh->GetAttributeTable(NULL, &boneMesh->numAttributeGroups); // 获取attribute table的大小
+		boneMesh->attributeTable = new D3DXATTRIBUTERANGE[boneMesh->numAttributeGroups];  // 创建空间
+		boneMesh->MeshData.pMesh->GetAttributeTable(boneMesh->attributeTable, NULL);      // 向attribute table填充数据
 
 
 		int numBones = pSkinInfo->GetNumBones();
-
 		boneMesh->boneOffsetMatrices  = new D3DXMATRIX[numBones];
 		boneMesh->currentBoneMatrices = new D3DXMATRIX[numBones];
 
@@ -264,15 +277,21 @@ void SkinnedMesh::Render(Bone *bone)
 					boneMesh->boneMatrixPtrs[i]);
 			}
 
-			// update the skinned mesh 
-			BYTE *src = NULL, *dest = NULL;
-			boneMesh->originalMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&src);
-			boneMesh->MeshData.pMesh->LockVertexBuffer(0, (void**)&dest);
+			// set hw matrix palette
+			g_pEffect->SetMatrixArray("MatrixPalette", boneMesh->currentBoneMatrices, boneMesh->pSkinInfo->GetNumBones());
 
-			boneMesh->pSkinInfo->UpdateSkinnedMesh(boneMesh->currentBoneMatrices, NULL, src, dest);
+			/*
+				// update the skinned mesh
+				BYTE *src = NULL, *dest = NULL;
+				boneMesh->originalMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&src);
+				boneMesh->MeshData.pMesh->LockVertexBuffer(0, (void**)&dest);
 
-			boneMesh->MeshData.pMesh->UnlockVertexBuffer();
-			boneMesh->originalMesh->UnlockVertexBuffer();
+				boneMesh->pSkinInfo->UpdateSkinnedMesh(boneMesh->currentBoneMatrices, NULL, src, dest);
+
+				boneMesh->MeshData.pMesh->UnlockVertexBuffer();
+				boneMesh->originalMesh->UnlockVertexBuffer();
+			*/
+
 
 
 			// render the mesh 
@@ -281,7 +300,19 @@ void SkinnedMesh::Render(Bone *bone)
 				int mtrlIndex = boneMesh->attributeTable[i].AttribId;
 				g_pDevice->SetMaterial(&(boneMesh->materials[mtrlIndex]));
 				g_pDevice->SetTexture(0, boneMesh->pTextures[mtrlIndex]);
+
+				g_pEffect->SetTexture("texDiffuse", boneMesh->pTextures[mtrlIndex]);
+
+				D3DXHANDLE hTech = g_pEffect->GetTechniqueByName("Skinning");
+
+				g_pEffect->SetTechnique(hTech);
+				g_pEffect->Begin(NULL, NULL);
+				g_pEffect->BeginPass(0);
+
 				boneMesh->MeshData.pMesh->DrawSubset(mtrlIndex);
+
+				g_pEffect->EndPass();
+				g_pEffect->End();
 			}
 		}
 	}

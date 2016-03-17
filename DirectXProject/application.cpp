@@ -332,22 +332,13 @@ void Application::Render()
 	if (SUCCEEDED(g_pDevice->BeginScene())) 
 	{
 	
-		// render soldier
+		// render drone
 		{
 			g_pEffect->SetMatrix("matW", &identity);
 			g_pEffect->SetMatrix("matVP", &(view * proj));
 			g_pEffect->SetVector("lightPos", &lightPos);
 
-			D3DXHANDLE hTech = g_pEffect->GetTechniqueByName("Lighting");
-			g_pEffect->SetTechnique(hTech);
-			g_pEffect->Begin(NULL, NULL);
-			g_pEffect->BeginPass(0);
-
 			m_drone.Render(NULL);
-			
-
-			g_pEffect->EndPass();
-			g_pEffect->End();
 		} 
 		/*
 		// render shadow

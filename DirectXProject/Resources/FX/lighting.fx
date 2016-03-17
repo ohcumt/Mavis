@@ -94,3 +94,69 @@ technique Shadow
 		PixelShader  = compile ps_2_0 ps_shadow();
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////
+
+extern float4x4 MatrixPalette[35]; 
+extern int numBoneInfluences = 2;
+
+//Vertex Input
+struct VS_INPUT_SKIN
+{
+     float4 position : POSITION0;
+     float3 normal   : NORMAL;
+     float2 tex0     : TEXCOORD0;
+	 float4 weights  : BLENDWEIGHT0;
+     int4   boneIndices : BLENDINDICES0;
+};
+
+VS_OUTPUT vs_Skinning(VS_INPUT_SKIN IN)
+{
+    VS_OUTPUT OUT = (VS_OUTPUT)0;
+
+    float4 p = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    float3 norm = float3(0.0f, 0.0f, 0.0f);
+    float lastWeight = 0.0f;
+    int n = numBoneInfluences-1;
+    IN.normal = normalize(IN.normal);
+    
+    //Blend vertex position & normal
+    for(int i = 0; i < n; ++i)
+    {
+        lastWeight += IN.weights[i];
+	    p += IN.weights[i] * mul(IN.position, MatrixPalette[IN.boneIndices[i]]);
+	    norm += IN.weights[i] * mul(IN.normal, MatrixPalette[IN.boneIndices[i]]);
+    }
+    lastWeight = 1.0f - lastWeight;
+    
+    p += lastWeight * mul(IN.position, MatrixPalette[IN.boneIndices[n]]);
+    norm += lastWeight * mul(IN.normal, MatrixPalette[IN.boneIndices[n]]);
+    p.w = 1.0f;
+    
+    //Transform vertex to world space
+	float4 posWorld = mul(p, matW);
+	
+	//... then to screen space
+    OUT.position = mul(posWorld, matVP);
+    
+    //Copy UV coordinate
+    OUT.tex0 = IN.tex0;
+    
+	//Calculate Lighting
+    norm = normalize(norm);
+    norm = mul(norm, matW);
+	OUT.shade = max(dot(norm, normalize(lightPos - posWorld)), 0.2f);
+     
+    return OUT;
+}
+
+technique Skinning
+{
+    pass P0
+    {
+		Lighting = false;
+		
+        VertexShader = compile vs_2_0 vs_Skinning();
+        PixelShader  = compile ps_2_0 ps_lighting();        
+    }
+}
