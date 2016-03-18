@@ -51,8 +51,10 @@ VS_OUTPUT vs_lighting(VS_INPUT IN)
 	//getting to position to object space
 	OUT.position = mul(posWorld, matVP);
 	 
+	//light the vertex
     OUT.shade = max(dot(normal, normalize(lightPos - posWorld)), 0.2f);
     
+    //copy texture coordinates
     OUT.tex0 = IN.tex0;
     
     return OUT;
@@ -97,8 +99,8 @@ technique Shadow
 
 ////////////////////////////////////////////////////////////////////////////
 
-extern float4x4 MatrixPalette[35]; 
-extern int numBoneInfluences = 2;
+extern float4x4 FinalTransforms[35]; 
+extern int NumVertInfluences = 2; // <--- Normally set dynamically.
 
 //Vertex Input
 struct VS_INPUT_SKIN
@@ -117,29 +119,24 @@ VS_OUTPUT vs_Skinning(VS_INPUT_SKIN IN)
     float4 p = float4(0.0f, 0.0f, 0.0f, 1.0f);
     float3 norm = float3(0.0f, 0.0f, 0.0f);
     float lastWeight = 0.0f;
-    int n = numBoneInfluences-1;
+    int n = NumVertInfluences-1;
+    
     IN.normal = normalize(IN.normal);
     
-    //Blend vertex position & normal
     for(int i = 0; i < n; ++i)
     {
         lastWeight += IN.weights[i];
-	    p += IN.weights[i] * mul(IN.position, MatrixPalette[IN.boneIndices[i]]);
-	    norm += IN.weights[i] * mul(IN.normal, MatrixPalette[IN.boneIndices[i]]);
+	    p += IN.weights[i] * mul(IN.position, FinalTransforms[IN.boneIndices[i]]);
+	    norm += IN.weights[i] * mul(IN.normal, FinalTransforms[IN.boneIndices[i]]);
     }
     lastWeight = 1.0f - lastWeight;
     
-    p += lastWeight * mul(IN.position, MatrixPalette[IN.boneIndices[n]]);
-    norm += lastWeight * mul(IN.normal, MatrixPalette[IN.boneIndices[n]]);
-    p.w = 1.0f;
+    p += lastWeight * mul(IN.position, FinalTransforms[IN.boneIndices[n]]);
+    norm += lastWeight * mul(IN.normal, FinalTransforms[IN.boneIndices[n]]);
     
-    //Transform vertex to world space
+    p.w = 1.0f;    	
 	float4 posWorld = mul(p, matW);
-	
-	//... then to screen space
     OUT.position = mul(posWorld, matVP);
-    
-    //Copy UV coordinate
     OUT.tex0 = IN.tex0;
     
 	//Calculate Lighting

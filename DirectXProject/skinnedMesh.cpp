@@ -149,7 +149,6 @@ STDMETHODIMP BoneHierarchyLoader::DestroyFrame(THIS_ LPD3DXFRAME pFrameToFree)
 
 STDMETHODIMP BoneHierarchyLoader::DestroyMeshContainer(THIS_ LPD3DXMESHCONTAINER pMeshContainerBase)
 {
-
 	BoneMesh *boneMesh = (BoneMesh*)pMeshContainerBase;
 	if (boneMesh) 
 	{
@@ -278,21 +277,9 @@ void SkinnedMesh::Render(Bone *bone)
 			}
 
 			// set hw matrix palette
-			g_pEffect->SetMatrixArray("MatrixPalette", boneMesh->currentBoneMatrices, boneMesh->pSkinInfo->GetNumBones());
-
-			/*
-				// update the skinned mesh
-				BYTE *src = NULL, *dest = NULL;
-				boneMesh->originalMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&src);
-				boneMesh->MeshData.pMesh->LockVertexBuffer(0, (void**)&dest);
-
-				boneMesh->pSkinInfo->UpdateSkinnedMesh(boneMesh->currentBoneMatrices, NULL, src, dest);
-
-				boneMesh->MeshData.pMesh->UnlockVertexBuffer();
-				boneMesh->originalMesh->UnlockVertexBuffer();
-			*/
-
-
+			D3DXMATRIX identity;	
+			g_pEffect->SetMatrixArray("FinalTransforms", boneMesh->currentBoneMatrices, boneMesh->pSkinInfo->GetNumBones());
+			D3DXMatrixIdentity(&identity);
 
 			// render the mesh 
 			for (int i=0; i<(int)boneMesh->numAttributeGroups; ++i) 
@@ -300,9 +287,8 @@ void SkinnedMesh::Render(Bone *bone)
 				int mtrlIndex = boneMesh->attributeTable[i].AttribId;
 				g_pDevice->SetMaterial(&(boneMesh->materials[mtrlIndex]));
 				g_pDevice->SetTexture(0, boneMesh->pTextures[mtrlIndex]);
-
 				g_pEffect->SetTexture("texDiffuse", boneMesh->pTextures[mtrlIndex]);
-
+				g_pEffect->SetMatrix("matW", &identity);
 				D3DXHANDLE hTech = g_pEffect->GetTechniqueByName("Skinning");
 
 				g_pEffect->SetTechnique(hTech);
@@ -310,6 +296,29 @@ void SkinnedMesh::Render(Bone *bone)
 				g_pEffect->BeginPass(0);
 
 				boneMesh->MeshData.pMesh->DrawSubset(mtrlIndex);
+
+				g_pEffect->EndPass();
+				g_pEffect->End();
+			}
+		}
+		else 
+		{
+			// normal static mesh
+			g_pEffect->SetMatrix("matW", &bone->CombinedTransformationMatrix);
+			D3DXHANDLE hTech = g_pEffect->GetTechniqueByName("Lighting");
+			g_pEffect->SetTechnique(hTech);
+
+			// render the mesh 
+			int numMaterial = (int)boneMesh->materials.size();
+			for (int i=0; i<numMaterial; ++i) 
+			{
+				g_pDevice->SetMaterial(&boneMesh->materials[i]);
+				g_pEffect->SetTexture("texDiffuse", boneMesh->pTextures[i] );
+
+				g_pEffect->Begin(NULL, NULL);
+				g_pEffect->BeginPass(0);
+
+				boneMesh->originalMesh->DrawSubset(i);
 
 				g_pEffect->EndPass();
 				g_pEffect->End();
