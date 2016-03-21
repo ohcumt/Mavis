@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXProject", "DirectXProject\DirectXProject.vcxproj", "{07D46B16-3128-440D-8BE1-CD63AAB21A55}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShaderProject", "ShaderProject\ShaderProject.vcxproj", "{4AF9A972-47BC-4155-829F-5DDA1DC185F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -15,6 +17,10 @@ Global
 		{07D46B16-3128-440D-8BE1-CD63AAB21A55}.Debug|Win32.Build.0 = Debug|Win32
 		{07D46B16-3128-440D-8BE1-CD63AAB21A55}.Release|Win32.ActiveCfg = Release|Win32
 		{07D46B16-3128-440D-8BE1-CD63AAB21A55}.Release|Win32.Build.0 = Release|Win32
+		{4AF9A972-47BC-4155-829F-5DDA1DC185F7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4AF9A972-47BC-4155-829F-5DDA1DC185F7}.Debug|Win32.Build.0 = Debug|Win32
+		{4AF9A972-47BC-4155-829F-5DDA1DC185F7}.Release|Win32.ActiveCfg = Release|Win32
+		{4AF9A972-47BC-4155-829F-5DDA1DC185F7}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
